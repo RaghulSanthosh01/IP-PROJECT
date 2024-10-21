@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Complaints</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <header class="bg-dark text-white text-center p-3">
+        <h1>Complaint Management System</h1>
+    </header>
+
+    <div class="container mt-5">
+        <h2 class="text-center">View Complaints</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Category</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody id="complaintList"></tbody>
+        </table>
+    </div>
+
+    <script>
+        async function fetchComplaints() {
+            try {
+                const response = await fetch('http://localhost/complaint_management/Backend/api.php');
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const complaints = await response.json();
+                const complaintList = document.getElementById('complaintList');
+                complaintList.innerHTML = '';
+
+                complaints.forEach(complaint => {
+                    const row = document.createElement('tr');
+
+                    row.innerHTML = `
+                        <td>${complaint.title}</td>
+                        <td>${complaint.description}</td>
+                        <td>${complaint.category}</td>
+                        <td>${complaint.status}</td> <!-- Display status -->
+                        <td>${new Date(complaint.created_at).toLocaleString()}</td>
+                    `;
+
+                    complaintList.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error fetching complaints:', error);
+            }
+        }
+
+        // Fetch complaints on page load
+        document.addEventListener('DOMContentLoaded', fetchComplaints);
+    </script>
+</body>
+</html>

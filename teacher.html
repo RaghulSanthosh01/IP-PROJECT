@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - View Complaints</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <header class="bg-dark text-white text-center p-3">
+        <h1>Complaint Management System - Teacher</h1>
+        <nav class="nav">
+            <a class="nav-link text-white" href="register.html">Register Complaint</a>
+            <a class="nav-link text-white" href="complaints.html">View Complaints</a>
+            <a class="nav-link text-white" href="#help">Help</a>
+        </nav>
+    </header>
+
+    <div class="container mt-5">
+        <h2 class="text-center">All Complaints</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Category</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="complaintsTableBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        // Function to fetch complaints and display them in a table
+        async function fetchComplaints() {
+            try {
+                const response = await fetch('http://localhost/complaint_management/Backend/api.php');
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const complaints = await response.json();
+                const complaintsTableBody = document.getElementById('complaintsTableBody');
+                complaintsTableBody.innerHTML = '';
+
+                complaints.forEach(complaint => {
+                    const row = document.createElement('tr');
+
+                    row.innerHTML = `
+                        <td>${complaint.title}</td>
+                        <td>${complaint.description}</td>
+                        <td>${complaint.category}</td>
+                        <td>
+                            <select class="form-control status-select" data-id="${complaint.id}">
+                                <option value="Pending" ${complaint.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                                <option value="In Progress" ${complaint.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                                <option value="Resolved" ${complaint.status === 'Resolved' ? 'selected' : ''}>Resolved</option>
+                            </select>
+                        </td>
+                        <td>${new Date(complaint.created_at).toLocaleString()}</td>
+                        <td>
+                            <button class="btn btn-primary update-status-btn" data-id="${complaint.id}">Update Status</button>
+                        </td>
+                    `;
+
+                    complaintsTableBody.appendChild(row);
+                });
+
+                // Add event listeners for all the "Update Status" buttons
+                const updateButtons = document.querySelectorAll('.update-status-btn');
+                updateButtons.forEach(button => {
+                    button.addEventListener('click', async (event) => {
+                        const complaintId = event.target.getAttribute('data-id');
+                        const statusSelect = document.querySelector(`select[data-id="${complaintId}"]`);
+                        const newStatus = statusSelect.value;
+
+                        await updateComplaintStatus(complaintId, newStatus);
+                    });
+                });
+
+            } catch (error) {
+                console.error('Error fetching complaints:', error);
+            }
+        }
+
+        // Function to update the complaint status
+        async function updateComplaintStatus(complaintId, newStatus) {
+            try {
+                const response = await fetch('http://localhost/complaint_management/Backend/api.php', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id: complaintId,
+                        status: newStatus
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error updating status');
+                }
+
+                const result = await response.json();
+                alert(result.message);
+            } catch (error) {
+                console.error('Error updating complaint status:', error);
+            }
+        }
+
+        // Fetch complaints on page load
+        document.addEventListener('DOMContentLoaded', fetchComplaints);
+    </script>
+</body>
+</html>
